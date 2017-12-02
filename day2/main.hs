@@ -1,25 +1,27 @@
 import System.IO  
-import Control.Monad
 import Data.List
 
-listOfInts xs = map (map (read::String -> Int)) $ map words $ lines xs
-isDivisable x y = case x `rem` y == 0 of True  -> [ x, y ]
-                                         False -> []
-part1 xs = sum $ listOfDiffs xs
-  where listOfDiffs xs = map rowDiff $ listOfInts xs
-        rowDiff xs     = (maximum xs) - (minimum xs)
+listOfInts :: String -> [[Int]]
+listOfInts = map (map (read::String -> Int) . words) . lines
 
-part2 xs = sum rowDiffs
-  where list             = listOfInts xs
-        rowDiffs         = map rowDiff $ map divRow list
-        rowDiff xs       = quot (xs!!0) (xs!!1)
-        divRow xs        = head $ head $ removeEmpty $
-                           map removeEmpty $ findDiv $ xs
-        findDiv xs       = (listOfDiv sorted):(findDiv (drop 1 sorted))
-          where sorted = reverse . sort $ xs
-        listOfDiv (x:xs) = map (isDivisable x) $ xs
-        removeEmpty xs   = filter (\l -> length l > 0) xs
+part1 :: String -> Int
+part1 = sum . listOfDiffs
+  where listOfDiffs = map rowDiff . listOfInts
+        rowDiff xs  = maximum xs - minimum xs
 
+part2 :: String -> Int
+part2 = sum . rowDiffs
+  where rowDiffs         = map (rowDiff . divRow) . listOfInts
+        rowDiff xs       = quot (head xs) (xs!!1)
+        divRow           = head . head . removeEmpty . map removeEmpty . findDiv
+        findDiv xs       = listOfDiv sorted:findDiv (drop 1 sorted)
+          where sorted = sortBy (flip compare) xs
+        listOfDiv []     = []
+        listOfDiv (x:xs) = map (isDivisable x) xs
+        isDivisable x y  = if x `rem` y == 0 then [x, y] else []
+        removeEmpty      = filter (not . null)
+
+main :: IO ()
 main = do  
   handle <- openFile "input.txt" ReadMode
   contents <- hGetContents handle

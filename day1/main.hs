@@ -1,21 +1,19 @@
 import System.IO  
-import Control.Monad
 import Data.Char (isSpace, digitToInt)
 
-evaluate f xs = sum $ take listLength $ zipWith getVal cyclicList $ drop (f listLength) cyclicList
-  where list       = toInts xs
+parts :: (Int -> Int) -> String -> Int
+parts f xs = sum . take listLength . zipWith getVal list $ offsetList
+  where list       = map digitToInt $ trimEnd xs
+        offsetList = drop (f listLength) list ++ list
         listLength = length list
-        cyclicList = cyclic list
-        toInts xs  = map digitToInt $ trimEnd xs
         trimEnd    = reverse . dropWhile isSpace . reverse
-        cyclic xs  = xs ++ cyclic xs
-        getVal x y = case x == y of True  -> x
-                                    False -> 0
+        getVal x y = if x == y then x else 0
 
+main :: IO ()
 main = do  
   handle <- openFile "input.txt" ReadMode
   contents <- hGetContents handle
-  print $ evaluate (\l -> 1) contents
-  print $ evaluate (\l -> quot l 2) contents
+  print $ parts (const 1) contents
+  print $ parts (`quot` 2) contents
   hClose handle
 
